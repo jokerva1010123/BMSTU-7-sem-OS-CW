@@ -1,0 +1,172 @@
+%----------------------- Преамбула -----------------------
+\documentclass[ut8x, 14pt, oneside, a4paper]{extarticle}
+
+%----------------------- Преамбула -----------------------
+
+\usepackage{extsizes} % Для добавления в параметры класса документа 14pt
+
+% Для работы с несколькими языками и шрифтом Times New Roman по-умолчанию
+\usepackage[english,russian]{babel}
+\usepackage[T2A]{fontenc}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage{textcomp}
+
+\usepackage{totcount}
+
+\newtotcounter{citnum} %From the package documentation
+\def\oldbibitem{} \let\oldbibitem=\bibitem
+\def\bibitem{\stepcounter{citnum}\oldbibitem}
+% ГОСТовские настройки для полей и абзацев
+\usepackage[left=30mm,right=10mm,top=20mm,bottom=20mm]{geometry}
+\usepackage{misccorr}
+\usepackage{indentfirst}
+\usepackage{enumitem}
+\setlength{\parindent}{1.25cm}
+%\setlength{\parskip}{1em} % поменять
+%\linespread{1.3}
+
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{caption}
+\setlist{nolistsep} % Отсутствие отступов между элементами \enumerate и \itemize
+
+% Дополнительное окружения для подписей
+\usepackage{array}
+\newenvironment{signstabular}[1][1]{
+	\renewcommand*{\arraystretch}{#1}
+	\tabular
+}{
+	\endtabular
+}
+% Переопределение стандартных \section, \subsection, \subsubsection по ГОСТу;
+% Переопределение их отступов до и после для 1.5 интервала во всем документе
+\usepackage{titlesec}
+
+\titleformat{\section}[block]
+{\bfseries\normalsize\filcenter}{\thesection}{1em}{}
+
+\titleformat{\subsection}[hang]
+{\bfseries\normalsize}{\thesubsection}{1em}{}
+\titlespacing\subsection{\parindent}{\parskip}{\parskip}
+
+\titleformat{\subsubsection}[hang]
+{\bfseries\normalsize}{\thesubsubsection}{1em}{}
+\titlespacing\subsubsection{\parindent}{\parskip}{\parskip}
+
+% Работа с изображениями и таблицами; переопределение названий по ГОСТу
+%\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+
+\usepackage{caption}
+
+\captionsetup[figure]{labelsep=endash, singlelinecheck=false, justification=centering}
+\captionsetup[table]{justification=raggedleft, singlelinecheck=false, labelsep=endash}
+\addto\captionsrussian{\renewcommand{\figurename}{Рисунок}}
+\usepackage{chngcntr}
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\counterwithin{equation}{section}
+\renewcommand{\labelenumi}{\arabic{enumi}.}
+\renewcommand{\labelenumii}{\arabic{enumii})}
+\AddEnumerateCounter(\asbuk)
+\renewcommand{\labelenumiii}{\asbuk{enumiii})}
+\renewcommand{\labelitemi}{--}
+
+%\renewcommand{\thetable}{\thechapter.\arabic{figure}}
+\usepackage{graphicx}
+%\usepackage{slashbox} % Диагональное разделение первой ячейки в таблицах
+
+% Цвета для гиперссылок и листингов
+\usepackage{color}
+
+% Гиперссылки \toc с кликабельностью
+\usepackage{hyperref}
+
+\hypersetup{
+	hidelinks
+}
+
+% Листинги
+%\setsansfont{Arial}
+%\setmonofont{Courier New}
+\usepackage{color} % Цвета для гиперссылок и листингов
+\definecolor{comment}{rgb}{0,0.5,0}
+\definecolor{plain}{rgb}{0.2,0.2,0.2}
+\definecolor{string}{rgb}{0.91,0.45,0.32}
+\hypersetup{citecolor=blue}
+\hypersetup{citecolor=black}
+\newfontfamily\lstfont{Times New Roman}
+
+\usepackage{listings}
+\lstset{
+	basicstyle=\fontsize{8}{10}\linespread{0.8}\lstfont,
+	language=sql, % Или другой ваш язык -- см. документацию пакета
+	commentstyle=\color{comment},
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	xleftmargin =.19in,
+	tabsize=4,
+	extendedchars=\true,
+	breaklines=true,
+	keywordstyle=\color{blue},
+	frame=single,
+	stringstyle=\lstfont\color{string}\lstfont,
+	showspaces=false,
+	showtabs=false,
+	showstringspaces=false,
+%	xleftmargin=17pt,
+%	framexleftmargin=17pt,
+%	framexrightmargin=5pt,
+%	framexbottommargin=4pt,
+	showstringspaces=false,
+	inputencoding=utf8x,
+	keepspaces=true,
+	captionpos=t,
+	breakatwhitespace=false,
+}
+%\lstset{
+%	language = python,
+%	basicstyle=\small\sffamily,
+%	numbers=left,
+%	numberstyle=\tiny,
+%	stepnumber=1,
+%	numbersep=5pt,
+%	xleftmargin =.19in,
+%	showspaces=false,
+%	showtabs=false,
+%	frame=single,
+%	tabsize=2,
+%	captionpos=t,
+%	breaklines=true,
+%	breakatwhitespace=false,
+%	escapeinside={\#*}{*)}
+%}
+
+%\DeclareCaptionLabelSeparator{line}{\ --\ }
+\DeclareCaptionFont{white}{\color{white}}
+\captionsetup[lstlisting]{
+	singlelinecheck=false,
+	justification=raggedright,
+	labelsep=endash,
+}
+
+\usepackage{ulem} % Нормальное нижнее подчеркивание
+\usepackage{hhline} % Двойная горизонтальная линия в таблицах
+\usepackage[figure,table]{totalcount} % Подсчет изображений, таблиц
+\usepackage{rotating} % Поворот изображения вместе с названием
+\usepackage{lastpage} % Для подсчета числа страниц
+
+\makeatletter
+\renewcommand\@biblabel[1]{#1.}
+\makeatother
+
+
+\usepackage{color}
+\usepackage[cache=false, newfloat]{minted}
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Листинг}
+\usepackage{float}
+\usepackage{amsmath}
+%\usepackage{slashbox}

@@ -1,0 +1,164 @@
+\section{Технологический раздел}
+В данном разделе выбирается язык программирования, на котором будет реализована поставленная задача, производится выбор среды разработки и рассматриваются некоторые мометы реализации загружаемого модуля ядра.
+\subsection{Выбор языка программирования}
+В качестве языка программирования для реализации данной курсовой работы был выбран язык C. При помощи этого языка реализованы все модули ядра и драйверы с использованием встроенного в ОС Linux компилятора GCC.
+\subsection{Выбор среды разработки}
+В качестве среды разработки был выбран стандартный тектовый редактор ОС Linux.
+
+Ниже показано содержимое Makefile, содержащего набор инструкций, используемых утилитой make в инструментарии автоматизации сборки.
+
+\begin{lstlisting}[caption = Содержимое Makefile, label = {lst:1}]
+CONFIG_MODULE_SIG=n
+
+ifneq ($(KERNELRELEASE),)
+	obj-m += module_dev.o
+else
+	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+	PWD := $(shell pwd)
+default:
+	make -C $(KERNELDIR) M=$(PWD) modules
+clean:
+	make -C $(KERNELDIR) M=$(PWD) modules clean
+	rm -rf a.out
+endif
+\end{lstlisting}
+
+\subsection{Описание некоторых моментов реализации}
+\subsubsection{Модуль ядра}
+Код функции, обрабатывающая запись в специальный файл.
+\begin{lstlisting}[caption = , label = {lst:2}]
+ssize_t module_dev_write(struct file *file, const char __user *buf, size_t size, loff_t *offset)
+{
+    printk(KERN_INFO "module_dev: called write %ld\n", size);
+
+    copy_from_user(msg, buf, size);
+    msg_length = size;
+
+    is_empty = 0;
+
+    if (msg[0] == '1')
+    {
+        tasklet_schedule(&my_tasklet);
+    }
+    printk(KERN_INFO "module_dev: write msg '%s'\n", msg);
+
+    return size;
+}
+\end{lstlisting}
+
+\subsubsection{Работа с индикаторами клавиатуры}
+Доступ к индикаторам клавиатуры реализован через виртуальную консоль, доступную в ядре через библиотеку linux/console\_struct.h. Отложенное действие реализовано через тасклет.
+
+Поставновка таймера на выполнение
+\begin{lstlisting}[caption = , label = {lst:2}]
+struct tty_driver *load_keyboard_led_driver(void)
+{
+    int i;
+    struct tty_driver *driver;
+
+    printk(KERN_INFO "kbleds: loading\n");
+    printk(KERN_INFO "kbleds: fgconsole is %x\n", fg_console);
+    printk(KERN_INFO "kbleds: MAX_NR_CONSOLES %i", MAX_NR_CONSOLES);
+    
+    for (i = 0; i < MAX_NR_CONSOLES; i++)
+    {
+        if (!vc_cons[i].d)
+            break;
+        printk(KERN_INFO "poet_atkm: console[%i/%i] #%i, tty %lx\n", i,
+               MAX_NR_CONSOLES, vc_cons[i].d->vc_num,
+               (unsigned long)vc_cons[i].d->port.tty);
+    }
+
+    printk(KERN_INFO "kbleds: finished scanning consoles\n");
+
+    driver = vc_cons[fg_console].d->port.tty->driver;
+    printk(KERN_INFO "kbleds: tty driver magic %x\n", driver->name);
+
+    return driver;
+}
+\end{lstlisting}
+
+Функция, включающая/выключающая индикаторы
+\begin{lstlisting}[caption = , label = {lst:2}]
+#define ALL_LEDS_ON 0x07
+#define RESTORE_LEDS 0xFF
+
+int is_led_on = 0;
+
+void tasklet_fn_toggle_led(unsigned long data)
+{
+    unsigned long status;
+
+    if (is_led_on)
+    {
+        is_led_on = 0;
+        status = ALL_LEDS_ON;
+    }
+    else
+    {
+        is_led_on = 1;
+        status = RESTORE_LEDS;
+    }
+
+    (my_driver->ops->ioctl)(vc_cons[fg_console].d->port.tty, KDSETLED, status);
+
+}
+\end{lstlisting}
+
+\subsubsection{Программа пользователя}
+\begin{lstlisting}[caption = , label = {lst:2}]
+#include <alsa/asoundlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void write_signal_to_proc()
+{
+    FILE *fp = fopen("/proc/module_dir/dev", "w");
+    if (fp == NULL)
+        printf("unable to open proc file\n");
+
+    fprintf(fp, "1");
+    fclose(fp);
+}
+
+snd_pcm_t *pcm_device;
+
+int main()
+{
+    int count = 1;
+    while(1)
+    {
+        int totalCards = 0;   
+        int cardNum = -1;     
+        int err;
+
+        for (;;) {
+            if ((err = snd_card_next(&cardNum)) < 0) {
+                fprintf(stderr, "Can't get the next card number: %s\n",
+                                snd_strerror(err));
+                break;
+            }
+            if (cardNum < 0)
+                break;
+            ++totalCards;   
+        }
+        
+        if(count < totalCards)
+        {
+            printf("%d %d\n", count, totalCards);
+            printf("Headset connected\n");
+            write_signal_to_proc();
+            write_signal_to_proc();
+        }
+        else if(count > totalCards)
+        {
+            printf("%d %d\n", count, totalCards);
+            printf("Headset disconnected\n");
+            write_signal_to_proc();
+            write_signal_to_proc();
+        }
+        count = totalCards;
+        snd_config_update_free_global();
+    }
+}
+\end{lstlisting}

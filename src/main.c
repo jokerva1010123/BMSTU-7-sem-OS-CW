@@ -35,18 +35,22 @@ int main()
                 break;
             ++totalCards;   // Another card found, so bump the count
         }
+        
         if(count < totalCards)
         {
+            //printf("%d %d\n", count, totalCards);
             printf("Headset connected\n");
             write_signal_to_proc();
-            //write_signal_to_proc();
+            write_signal_to_proc();
         }
         else if(count > totalCards)
         {
+            //printf("%d %d\n", count, totalCards);
             printf("Headset disconnected\n");
             write_signal_to_proc();
-            //write_signal_to_proc();
+            write_signal_to_proc();
         }
+        count = totalCards;
         // ALSA allocates some memory to load its config file when we call
         // snd_card_next. Now that we're done getting the info, tell ALSA
         // to unload the info and release the memory.

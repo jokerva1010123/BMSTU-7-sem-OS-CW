@@ -8,10 +8,6 @@ else
 default:
 	make -C $(KERNELDIR) M=$(PWD) modules
 clean:
-	rm -rf .tmp_versions
-	rm .module_dev.*
-	rm *.o
-	rm *.mod.c
-	rm *.symvers
-	rm *.order
+	make -C $(KERNELDIR) M=$(PWD) modules clean
+	rm -rf abc
 endif

@@ -37,6 +37,7 @@ void tasklet_fn_toggle_led(unsigned long data)
     }
 
     (my_driver->ops->ioctl)(vc_cons[fg_console].d->port.tty, KDSETLED, status);
+
 }
 
 struct tty_driver *load_keyboard_led_driver(void)

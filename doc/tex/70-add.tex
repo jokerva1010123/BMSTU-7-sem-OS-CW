@@ -1,3 +1,62 @@
+\begin{center}
+    %\setupsectionstar
+    \section*{ПРИЛОЖЕНИЕ A}
+\end{center}
+\addcontentsline{toc}{section}{ПРИЛОЖЕНИЕ A}
+
+main.c 
+\begin{lstlisting}[caption = , label = {lst:2}]
+#include <alsa/asoundlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void write_signal_to_proc()
+{
+    FILE *fp = fopen("/proc/module_dir/dev", "w");
+    if (fp == NULL)
+        printf("unable to open proc file\n");
+    fprintf(fp, "1");
+    fclose(fp);
+}
+snd_pcm_t *pcm_device;
+int main()
+{
+    int count = 1;
+    while(1)
+    {
+        int totalCards = 0;  
+        int cardNum = -1;  
+        int err;
+
+        for (;;) {
+            if ((err = snd_card_next(&cardNum)) < 0) {
+                fprintf(stderr, "Can't get the next card number: %s\n",
+                                snd_strerror(err));
+                break;
+            }
+            if (cardNum < 0)
+                break;
+            ++totalCards; 
+        }
+        if(count < totalCards)
+        {
+            printf("Headset connected\n");
+            write_signal_to_proc();
+        }
+        else if(count > totalCards)
+        {
+            printf("Headset disconnected\n");
+            write_signal_to_proc();
+        }
+        count = totalCards;
+        snd_config_update_free_global();
+    }
+}
+\end{lstlisting}
+
+module\_dev.c
+
+\begin{lstlisting}[caption = , label = {lst:2}]
 #include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/interrupt.h>
@@ -9,7 +68,7 @@
 #include <linux/console_struct.h> /* For vc_cons */
 #include <linux/vt_kern.h>
 
-MODULE_AUTHOR("anhthu");
+MODULE_AUTHOR("vanh");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Toggle keyboard LED when '1' is written in file proc");
 // Переключить светодиод клавиатуры, когда в файл proc записывается '1'
@@ -35,8 +94,8 @@ void tasklet_fn_toggle_led(unsigned long data)
         is_led_on = 1;
         status = RESTORE_LEDS;
     }
-
     (my_driver->ops->ioctl)(vc_cons[fg_console].d->port.tty, KDSETLED, status);
+
 }
 
 struct tty_driver *load_keyboard_led_driver(void)
@@ -58,16 +117,12 @@ struct tty_driver *load_keyboard_led_driver(void)
     }
 
     printk(KERN_INFO "kbleds: finished scanning consoles\n");
-
     driver = vc_cons[fg_console].d->port.tty->driver;
     printk(KERN_INFO "kbleds: tty driver magic %x\n", driver->name);
 
     return driver;
 }
 
-/*----------------------------------------------------------------- */
-
-/* message from user space */
 static char msg[8];
 static ssize_t msg_length;
 static int is_empty = 1;
@@ -114,9 +169,7 @@ ssize_t module_dev_write(struct file *file, const char __user *buf, size_t size,
     is_empty = 0;
 
     if (msg[0] == '1')
-    {
         tasklet_schedule(&my_tasklet);
-    }
     printk(KERN_INFO "module_dev: write msg '%s'\n", msg);
 
     return size;
@@ -152,3 +205,4 @@ static void __exit exit_module_dev(void)
 
 module_init(init_module_dev);
 module_exit(exit_module_dev);
+\end{lstlisting}
